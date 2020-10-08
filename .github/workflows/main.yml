@@ -1,55 +1,50 @@
+name: Deploy ASP.NET MVC App deploy to Azure Web App
+
 on:
   push:
     branches:
       - master
-  
+# CONFIGURATION
+#
+# For help, go to https://github.com/Azure/Actions
+#
+# 1. Set up the following secrets in your repository:
+#   AZURE_WEBAPP_PUBLISH_PROFILE
+#
+# 2. Change these variables for your configuration:
 env:
-  AZURE_WEBAPP_NAME: App-CiceroRodDevOpsChallenge2 
+  AZURE_WEBAPP_NAME: App-CiceroRodDevOpsChallenge2    # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
+  NUGET_VERSION: '5.3.1'           # set this to the dot net version to use
 
 jobs:
-  build:
-    name: Faz o build da aplicação
+  build-and-deploy:
     runs-on: windows-latest
- 
     steps:
-    - uses: actions/checkout@v1
-      name: Checkout
 
-    - name: Configura NuGet
-      uses: NuGet/setup-nuget@v1.0.2
-
-    - name: Adiciona msbuild
-      uses: microsoft/setup-msbuild@v1.0.0
-
-    - name: Recupera os pacotes NuGet
-      run: nuget restore Nibo.DevOpsChallenge.sln
- 
-    - name: Faz o Build e Publish da aplicação
-      run: msbuild Nibo.DevOpsChallenge.sln /p:Configuration=Release /p:DeployOnBuild=true /p:PublishProfile=FolderProfile
-
-    - name: Faz Upload do Artefato
-      uses: actions/upload-artifact@v1.0.0
+    # checkout the repo
+    - uses: actions/checkout@master  
+    
+    - name: Install Nuget
+      uses: nuget/setup-nuget@v1
       with:
-        name: release
-        path: Nibo.DevOpsChallenge\obj\Release
+        nuget-version: ${{ env.NUGET_VERSION}}
+    - name: NuGet to restore dependencies as well as project-specific tools that are specified in the project file
+      run: nuget restore
+  
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.0
+      #with:
+      #  vs-version: "[16.4,16.5]"  #Version of Visual Studio to search; defaults to latest if not specified
 
-  deploy:
-    needs: build
-    name: Deploy para o Azure
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v2
-        name: Faz o download do artefato de build
-        with:
-          name: release
-          path: release
-
-      - name: Log Artefatos
-        run: ls -R
-
-      - uses: azure/webapps-deploy@v2
-        name: Deploy do WebApp
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          publish-profile: ${{ secrets.SECRET_cicerorodDevOpsChallenge  }}
-          package: ./release
+    - name: Run MSBuild
+      run: msbuild .\Nibo.DevOpsChallenge.sln
+       
+    - name: 'Run Azure webapp deploy action using publish profile credentials'
+      uses: azure/webapps-deploy@v2
+      with: 
+        app-name: ${{ env.AZURE_WEBAPP_NAME }} # Replace with your app name
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_1b51eb8be00e4f4c8e1079e9f1327dff  }} # Define secret variable in repository settings as per action documentation
+        package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/Nibo.DevOpsChallenge/'
+  
+  # For more samples to get started with GitHub Action workflows to deploy to Azure, refer to https://github.com/Azure/actions-workflow-samples
