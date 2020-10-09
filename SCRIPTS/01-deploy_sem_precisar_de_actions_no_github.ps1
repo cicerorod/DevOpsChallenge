@@ -28,7 +28,7 @@
 $location = "BrazilSouth"
 $resourceGroup = "RG-DevOpsChallenge"
 $planName="Plan-DevOpsChallenge"
-$appName="App-DevOpsChallenge"
+$appName="App-DevOpsChallenge-cd"
 
 # Incluir o Personal Access Token do GitHub 
 $token=""
