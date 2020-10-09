@@ -22,7 +22,7 @@ $appName="App-DevOpsChallenge"
 $gitrepo="https://github.com/cicerorod/DevOpsChallenge"
 
 
-$token="135a9f07f202f2276533b44ccb9bd41d9718921d"
+$token=""
 
 
 echo "Passo 1/5 -> Criando resource group"
